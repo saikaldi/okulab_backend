@@ -4,6 +4,7 @@ package com.okulab.okulab.controller;
 import com.okulab.okulab.models.User;
 import com.okulab.okulab.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -14,8 +15,12 @@ import java.util.Optional;
 @CrossOrigin(origins = "http://127.0.0.1:5500")
 public class AuthController {
     private final UserRepository userRepository;
-    public AuthController(UserRepository userRepository){
+
+    private final BCryptPasswordEncoder passwordEncoder;
+
+    public AuthController(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder){
         this.userRepository=userRepository;
+        this.passwordEncoder=passwordEncoder;
     }
 
     @PostMapping("/register")
@@ -27,6 +32,9 @@ public class AuthController {
         user.setRole("ROLE_USER");
         user.setHasPaidAccess(false);
 
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPassword);
+
         userRepository.save(user);
         return ResponseEntity.ok("User registered successfully!");
     }
@@ -35,7 +43,7 @@ public class AuthController {
     public ResponseEntity<?> loginUser(@RequestBody User user){
         Optional<User> foundUser = userRepository.findByUsername(user.getUsername());
         if(foundUser.isPresent()){
-            if(foundUser.get().getPassword().equals(user.getPassword())){
+            if (passwordEncoder.matches(user.getPassword(), foundUser.get().getPassword())){
                 return ResponseEntity.ok("Login Successful!");
             }else{
                 return ResponseEntity.badRequest().body("Error: Invalid password");
