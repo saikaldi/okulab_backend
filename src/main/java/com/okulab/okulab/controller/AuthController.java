@@ -6,6 +6,8 @@ import com.okulab.okulab.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 
 @RestController
 @RequestMapping("/api/auth")
@@ -18,6 +20,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user){
+        System.out.println("Received user: " + user.getUsername());
         if(userRepository.findByUsername(user.getUsername()).isPresent()){
             return ResponseEntity.badRequest().body("Error: Username is already taken!");
         }
@@ -26,5 +29,20 @@ public class AuthController {
 
         userRepository.save(user);
         return ResponseEntity.ok("User registered successfully!");
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody User user){
+        Optional<User> foundUser = userRepository.findByUsername(user.getUsername());
+        if(foundUser.isPresent()){
+            if(foundUser.get().getPassword().equals(user.getPassword())){
+                return ResponseEntity.ok("Login Successful!");
+            }else{
+                return ResponseEntity.badRequest().body("Error: Invalid password");
+            }
+        } else{
+            return ResponseEntity.badRequest().body("Error: User not found!");
+        }
+
     }
 }

@@ -25,5 +25,5 @@ public class User {
 
     private String role="ROLE_USER";
 
-    private boolean hasPaidAccess=false;
+    private Boolean hasPaidAccess=false;
 }
